@@ -1,9 +1,8 @@
-package io.github.maskmasteruk.supabase.storage.Object;
+package io.github.maskmasteruk.supabase.storage;
 
 import java.util.HashMap;
 
 import io.github.maskmasteruk.supabase.core.Utils.JsonUtils;
-import io.github.maskmasteruk.supabase.storage.Helper;
 
 /**
  * Represents metadata for a storage object.

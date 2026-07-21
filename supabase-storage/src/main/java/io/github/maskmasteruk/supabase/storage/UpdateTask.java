@@ -1,4 +1,4 @@
-package io.github.maskmasteruk.supabase.storage.Tasks;
+package io.github.maskmasteruk.supabase.storage;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
@@ -17,36 +17,33 @@ import io.github.maskmasteruk.supabase.core.Network.RequestHandler;
 import io.github.maskmasteruk.supabase.core.Objects.Request;
 import io.github.maskmasteruk.supabase.core.Objects.Response;
 import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
-import io.github.maskmasteruk.supabase.storage.Helper;
 import io.github.maskmasteruk.supabase.storage.Listeners.OnProgressListener;
-import io.github.maskmasteruk.supabase.storage.Object.StorageMetadata;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseObject;
 
 /**
- * Handles the execution of a standard (non-resumable) upload task.
+ * Handles the execution of an update task for an existing object.
  * <p>
- * Purpose: This class implements the logic for uploading data (File, InputStream, or byte array)
- * to Supabase Storage using a POST request.
+ * Purpose: This class implements the logic for updating an existing object's content
+ * in Supabase Storage using a PUT request.
  * </p>
  * <p>
  * Responsibilities:
  * <ul>
- *     <li>Managing different data sources for upload.</li>
- *     <li>Streaming data to the network to minimize memory usage.</li>
- *     <li>Reporting progress to attached listeners.</li>
- *     <li>Handling API responses and mapping them to {@link SupabaseObject} or {@link SupabaseError}.</li>
+ *     <li>Managing data sources for update (File, InputStream, byte array).</li>
+ *     <li>Streaming updated content to the network.</li>
+ *     <li>Reporting update progress to listeners.</li>
+ *     <li>Mapping API responses to {@link SupabaseObject} or {@link SupabaseError}.</li>
  * </ul>
  * </p>
  */
-public class UploadTask {
+public class UpdateTask {
 
     /** Internal enumeration of supported data sources. */
     private enum DataType {
-        /** Upload from a {@link File}. */
+        /** Update from a {@link File}. */
         FILE,
-        /** Upload from an {@link InputStream}. */
+        /** Update from an {@link InputStream}. */
         INPUT_STREAM,
-        /** Upload from a byte array. */
+        /** Update from a byte array. */
         BYTES
     }
 
@@ -58,17 +55,17 @@ public class UploadTask {
 
     private final DataType dataType;
     private final long fileSize;
-    private final Task task;
+    Task task;
 
     /**
-     * Constructs an UploadTask for a {@link File}.
+     * Constructs an UpdateTask for a {@link File}.
      *
      * @param uploadUrl       The destination URL.
-     * @param file            The file to upload.
+     * @param file            The new file content.
      * @param storageMetadata Metadata for the object.
-     * @param task            The task instance to notify of progress and completion.
+     * @param task            The task instance to notify.
      */
-    public UploadTask(String uploadUrl, File file, StorageMetadata storageMetadata, Task task) {
+    public UpdateTask(String uploadUrl, File file, StorageMetadata storageMetadata, Task task) {
         this.uploadUrl = uploadUrl;
         this.file = file;
         fileSize = file.length();
@@ -78,14 +75,14 @@ public class UploadTask {
     }
 
     /**
-     * Constructs an UploadTask for a byte array.
+     * Constructs an UpdateTask for a byte array.
      *
      * @param uploadUrl       The destination URL.
-     * @param byteArray       The data to upload.
+     * @param byteArray       The new data.
      * @param storageMetadata Metadata for the object.
      * @param task            The task instance.
      */
-    public UploadTask(String uploadUrl, byte[] byteArray, StorageMetadata storageMetadata, Task task) {
+    public UpdateTask(String uploadUrl, byte[] byteArray, StorageMetadata storageMetadata, Task task) {
         this.uploadUrl = uploadUrl;
         this.byteArray = byteArray;
         fileSize = byteArray.length;
@@ -95,15 +92,15 @@ public class UploadTask {
     }
 
     /**
-     * Constructs an UploadTask for an {@link InputStream}.
+     * Constructs an UpdateTask for an {@link InputStream}.
      *
      * @param uploadUrl       The destination URL.
      * @param inputStream     The stream to read from.
-     * @param fileSize        The total size of the content (can be 0 if unknown).
+     * @param fileSize        The total size of the content.
      * @param storageMetadata Metadata for the object.
      * @param task            The task instance.
      */
-    public UploadTask(String uploadUrl, InputStream inputStream, long fileSize, StorageMetadata storageMetadata, Task task) {
+    public UpdateTask(String uploadUrl, InputStream inputStream, long fileSize, StorageMetadata storageMetadata, Task task) {
         this.uploadUrl = uploadUrl;
         this.inputStream = inputStream;
         if (fileSize == 0 && storageMetadata.getFileSize() != null) {
@@ -116,10 +113,9 @@ public class UploadTask {
     }
 
     /**
-     * Executes the upload operation.
-     * This method builds the network request and streams the data to the server.
+     * Executes the update operation.
      */
-    public void upload() {
+    void update() {
         int BUFFER_SIZE = Helper.getOptimalBufferSize(fileSize);
 
         Consumer<HttpURLConnection> uploadConsumer = connection -> {
@@ -176,11 +172,12 @@ public class UploadTask {
             }
         };
 
+
         try {
             Request request = new Request(uploadUrl)
                     .setUploadRunnable(uploadConsumer)
                     .setHeaders(storageMetadata.buildHeaders());
-            Response response = new RequestHandler().post(request);
+            Response response = new RequestHandler().put(request);
 
             if (response.getCode() >= HTTP_OK && response.getCode() <= HTTP_PARTIAL) {
                 task.onSuccess(new SupabaseObject(response.getResponseJSON()));
@@ -190,16 +187,14 @@ public class UploadTask {
         } catch (Exception e) {
             task.onError(new SupabaseError(e));
         }
-
     }
-
 
     /**
      * Copies bytes from a {@link FileInputStream} to an {@link OutputStream} and reports progress.
      *
-     * @param BUFFER_SIZE  The buffer size for writes.
-     * @param fis          The source file input stream.
-     * @param outputStream The destination output stream.
+     * @param BUFFER_SIZE  The buffer size.
+     * @param fis          Source stream.
+     * @param outputStream Destination stream.
      * @throws IOException If an I/O error occurs.
      */
     private void writeInputStreamToOutputStream(int BUFFER_SIZE, FileInputStream fis, OutputStream outputStream) throws IOException {
@@ -224,9 +219,9 @@ public class UploadTask {
     /**
      * Copies bytes from an {@link InputStream} to an {@link OutputStream} and reports progress.
      *
-     * @param BUFFER_SIZE  The buffer size for writes.
-     * @param inputStream  The source input stream.
-     * @param outputStream The destination output stream.
+     * @param BUFFER_SIZE  The buffer size.
+     * @param inputStream  Source stream.
+     * @param outputStream Destination stream.
      * @throws IOException If an I/O error occurs.
      */
     private void writeInputStreamToOutputStream(int BUFFER_SIZE, InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -248,19 +243,19 @@ public class UploadTask {
         outputStream.flush();
     }
 
-    /** @return The task associated with this upload. */
+    /** @return The task associated with this update. */
     public Task getTask() {
         return task;
     }
 
     /**
-     * Specialized {@link Task} for upload operations, supporting progress listeners.
+     * Specialized {@link Task} for update operations, supporting progress listeners.
      */
-    public static class Task extends io.github.maskmasteruk.supabase.storage.Tasks.Task<SupabaseObject> {
+    public static class Task extends io.github.maskmasteruk.supabase.storage.Task<SupabaseObject> {
         private final ArrayList<OnProgressListener> onProgressListeners;
 
         /**
-         * Constructs a new Upload Task.
+         * Constructs a new Update Task.
          */
         public Task() {
             super();
@@ -279,12 +274,12 @@ public class UploadTask {
         }
 
         /** @return The list of progress listeners. */
-        public ArrayList<OnProgressListener> getOnProgressListeners() {
+        ArrayList<OnProgressListener> getOnProgressListeners() {
             return onProgressListeners;
         }
 
         /** @return {@code true} if there are any progress listeners attached. */
-        public boolean hasOnProgressListeners() {
+        boolean hasOnProgressListeners() {
             return !onProgressListeners.isEmpty();
         }
 
@@ -295,7 +290,7 @@ public class UploadTask {
          *
          * @param progress The progress percentage.
          */
-        public void onProgress(int progress) {
+        void onProgress(int progress) {
             if (lastProgressPercentage.get() != progress) {
                 getOnProgressListeners().forEach(onProgressListener -> onProgressListener.onProgress(progress));
                 lastProgressPercentage.set(progress);

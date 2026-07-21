@@ -1,4 +1,4 @@
-package io.github.maskmasteruk.supabase.storage.Object;
+package io.github.maskmasteruk.supabase.storage;
 
 import androidx.annotation.NonNull;
 

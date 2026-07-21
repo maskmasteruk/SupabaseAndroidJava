@@ -27,8 +27,6 @@ import io.github.maskmasteruk.supabase.core.Objects.Response;
 import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
 import io.github.maskmasteruk.supabase.core.Utils.JsonUtils;
 import io.github.maskmasteruk.supabase.storage.Listeners.OnProgressListener;
-import io.github.maskmasteruk.supabase.storage.Object.StorageMetadata;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseStorageReference;
 
 /**
  * Handles the execution of resumable upload tasks using the TUS protocol.
@@ -136,7 +134,7 @@ public class ResumableUploadTask {
      * It first attempts to find an existing resumable URL and its offset,
      * otherwise it creates a new one.
      */
-    public void upload() {
+    void upload() {
         String bucketId = supabaseStorageReference.getBucketId();
         Uri.Builder uri = Uri.parse("").buildUpon();
         supabaseStorageReference.getPaths().forEach(uri::appendPath);
@@ -453,7 +451,7 @@ public class ResumableUploadTask {
     /**
      * Specialized {@link Task} for resumable upload operations, supporting progress listeners.
      */
-    public static class Task extends io.github.maskmasteruk.supabase.storage.Tasks.Task<Void> {
+    public static class Task extends io.github.maskmasteruk.supabase.storage.Task<Void> {
         private final ArrayList<OnProgressListener> onProgressListeners;
 
         /**
@@ -476,12 +474,12 @@ public class ResumableUploadTask {
         }
 
         /** @return The list of progress listeners. */
-        public ArrayList<OnProgressListener> getOnProgressListeners() {
+        ArrayList<OnProgressListener> getOnProgressListeners() {
             return onProgressListeners;
         }
 
         /** @return {@code true} if there are any progress listeners attached. */
-        public boolean hasOnProgressListeners() {
+        boolean hasOnProgressListeners() {
             return !onProgressListeners.isEmpty();
         }
 
@@ -492,7 +490,7 @@ public class ResumableUploadTask {
          *
          * @param progress The progress percentage.
          */
-        public void onProgress(int progress) {
+        void onProgress(int progress) {
             if (lastProgressPercentage.get() != progress) {
                 getOnProgressListeners().forEach(onProgressListener -> onProgressListener.onProgress(progress));
                 lastProgressPercentage.set(progress);

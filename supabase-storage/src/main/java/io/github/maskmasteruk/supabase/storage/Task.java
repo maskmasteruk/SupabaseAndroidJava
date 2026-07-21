@@ -1,4 +1,4 @@
-package io.github.maskmasteruk.supabase.storage.Tasks;
+package io.github.maskmasteruk.supabase.storage;
 
 import java.util.ArrayList;
 
@@ -86,17 +86,17 @@ public class Task<T> {
     }
 
     /** @return The list of success listeners. */
-    public ArrayList<OnSuccessListener<T>> getOnSuccessListeners() {
+    ArrayList<OnSuccessListener<T>> getOnSuccessListeners() {
         return onSuccessListeners;
     }
 
     /** @return The list of failure listeners. */
-    public ArrayList<OnFailureListener> getOnFailureListeners() {
+    ArrayList<OnFailureListener> getOnFailureListeners() {
         return onFailureListeners;
     }
 
     /** @return The list of completion listeners. */
-    public ArrayList<OnCompleteListener<T>> getOnCompleteListeners() {
+    ArrayList<OnCompleteListener<T>> getOnCompleteListeners() {
         return onCompleteListeners;
     }
 
@@ -105,7 +105,7 @@ public class Task<T> {
      *
      * @param result The result of the task.
      */
-    public void onSuccess(T result) {
+    void onSuccess(T result) {
         isSuccessful = true;
         this.result = result;
         getOnSuccessListeners().forEach(onSuccessListeners -> onSuccessListeners.onSuccess(result));
@@ -117,7 +117,7 @@ public class Task<T> {
      *
      * @param supabaseError The error that occurred.
      */
-    public void onError(SupabaseError supabaseError) {
+    void onError(SupabaseError supabaseError) {
         isSuccessful = false;
         getOnFailureListeners().forEach(onFailureListener -> onFailureListener.onFailure(supabaseError));
         getOnCompleteListeners().forEach(onFailureListener -> onFailureListener.onError(supabaseError));

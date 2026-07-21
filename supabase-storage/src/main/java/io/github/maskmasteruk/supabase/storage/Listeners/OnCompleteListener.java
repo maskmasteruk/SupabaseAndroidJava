@@ -1,7 +1,7 @@
 package io.github.maskmasteruk.supabase.storage.Listeners;
 
 import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
-import io.github.maskmasteruk.supabase.storage.Tasks.Task;
+import io.github.maskmasteruk.supabase.storage.Task;
 
 /**
  * Interface for operation completion listeners.

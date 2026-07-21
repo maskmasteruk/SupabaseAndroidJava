@@ -3,7 +3,7 @@ package io.github.maskmasteruk.supabase.storage.Callback;
 import java.util.ArrayList;
 
 import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
-import io.github.maskmasteruk.supabase.storage.Object.Bucket;
+import io.github.maskmasteruk.supabase.storage.Bucket;
 
 /**
  * Callback interface for retrieving multiple buckets.

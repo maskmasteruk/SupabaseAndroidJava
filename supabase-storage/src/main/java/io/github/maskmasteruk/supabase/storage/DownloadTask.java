@@ -1,4 +1,4 @@
-package io.github.maskmasteruk.supabase.storage.Tasks;
+package io.github.maskmasteruk.supabase.storage;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
@@ -16,7 +16,6 @@ import io.github.maskmasteruk.supabase.core.Network.RequestHandler;
 import io.github.maskmasteruk.supabase.core.Objects.Request;
 import io.github.maskmasteruk.supabase.core.Objects.Response;
 import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
-import io.github.maskmasteruk.supabase.storage.Helper;
 import io.github.maskmasteruk.supabase.storage.Listeners.OnProgressListener;
 
 /**
@@ -82,7 +81,7 @@ public class DownloadTask {
     /**
      * Executes the download operation.
      */
-    public void download() {
+    void download() {
 
         Consumer<HttpURLConnection> downloadRunnable = (connection) -> {
             try {
@@ -166,7 +165,7 @@ public class DownloadTask {
     /**
      * Specialized {@link Task} for download operations, supporting progress listeners.
      */
-    public static class Task extends io.github.maskmasteruk.supabase.storage.Tasks.Task<Object> {
+    public static class Task extends io.github.maskmasteruk.supabase.storage.Task<Object> {
         private final ArrayList<OnProgressListener> onProgressListeners;
 
         /**
@@ -189,12 +188,12 @@ public class DownloadTask {
         }
 
         /** @return The list of progress listeners. */
-        public ArrayList<OnProgressListener> getOnProgressListeners() {
+        ArrayList<OnProgressListener> getOnProgressListeners() {
             return onProgressListeners;
         }
 
         /** @return {@code true} if there are any progress listeners attached. */
-        public boolean hasOnProgressListeners() {
+        boolean hasOnProgressListeners() {
             return !onProgressListeners.isEmpty();
         }
 
@@ -206,7 +205,7 @@ public class DownloadTask {
          *
          * @param progress The progress percentage.
          */
-        public void onProgress(int progress) {
+        void onProgress(int progress) {
             if (lastProgressPercentage.get() != progress) {
                 getOnProgressListeners().forEach(onProgressListener -> onProgressListener.onProgress(progress));
                 lastProgressPercentage.set(progress);

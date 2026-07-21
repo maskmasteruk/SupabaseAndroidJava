@@ -11,15 +11,6 @@ import io.github.maskmasteruk.supabase.storage.Callback.OnCompleteCallback;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBucket;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBuckets;
 import io.github.maskmasteruk.supabase.storage.Enum.ObjectSortBy;
-import io.github.maskmasteruk.supabase.storage.Object.Bucket;
-import io.github.maskmasteruk.supabase.storage.Object.CreateBucket;
-import io.github.maskmasteruk.supabase.storage.Object.StorageMetadata;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseObject;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseStorageReference;
-import io.github.maskmasteruk.supabase.storage.Tasks.DownloadTask;
-import io.github.maskmasteruk.supabase.storage.Tasks.Task;
-import io.github.maskmasteruk.supabase.storage.Tasks.UpdateTask;
-import io.github.maskmasteruk.supabase.storage.Tasks.UploadTask;
 
 /**
  * The main entry point for the Supabase Storage library.
@@ -594,5 +585,38 @@ public class SupabaseStorage {
         return objectService.list(supabaseStorageReference, null, null, null, null);
     }
 
+    /**
+     * Generates a signed URL for the specified storage object.
+     * <p>
+     * The generated URL grants temporary access to the object until the specified
+     * expiration time. Additional URL options, such as image transformations and
+     * download behavior, can be configured using the provided
+     * {@link SupabaseObjectUrlBuilder}.
+     *
+     * @param supabaseStorageReference Reference to the storage object.
+     * @param expiresInSeconds         Lifetime of the signed URL, in seconds.
+     * @param supabaseObjectUrlBuilder Builder for configuring optional URL
+     *                                 parameters such as image transformations
+     *                                 and download behavior. May be {@code null}.
+     * @return A {@link Task} that completes with the generated absolute signed URL.
+     */
+    public Task<String> signUrl(SupabaseStorageReference supabaseStorageReference, long expiresInSeconds, SupabaseObjectUrlBuilder supabaseObjectUrlBuilder) {
+        return objectService.signUrl(supabaseStorageReference, expiresInSeconds, supabaseObjectUrlBuilder);
+    }
+
+    /**
+     * Generates a signed URL for the specified storage object.
+     * <p>
+     * This is a convenience overload that generates a signed URL without any
+     * additional URL options such as image transformations or download behavior.
+     *
+     * @param supabaseStorageReference Reference to the storage object.
+     * @param expiresInSeconds         Lifetime of the signed URL, in seconds.
+     * @return A {@link Task} that completes with the generated absolute signed URL.
+     * @see #signUrl(SupabaseStorageReference, long, SupabaseObjectUrlBuilder)
+     */
+    public Task<String> signUrl(SupabaseStorageReference supabaseStorageReference, long expiresInSeconds) {
+        return objectService.signUrl(supabaseStorageReference, expiresInSeconds, null);
+    }
 
 }

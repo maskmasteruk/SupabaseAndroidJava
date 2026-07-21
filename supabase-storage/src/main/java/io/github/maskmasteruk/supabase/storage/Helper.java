@@ -29,7 +29,6 @@ import io.github.maskmasteruk.supabase.storage.Callback.OnCompleteCallback;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBucket;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBuckets;
 import io.github.maskmasteruk.supabase.storage.Callback.OnProgressCallback;
-import io.github.maskmasteruk.supabase.storage.Tasks.Task;
 
 /**
  * Utility class for Supabase Storage.

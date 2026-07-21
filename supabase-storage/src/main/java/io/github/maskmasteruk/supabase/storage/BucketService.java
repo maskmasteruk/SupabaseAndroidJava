@@ -16,8 +16,6 @@ import io.github.maskmasteruk.supabase.core.Runnables;
 import io.github.maskmasteruk.supabase.storage.Callback.OnCompleteCallback;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBucket;
 import io.github.maskmasteruk.supabase.storage.Callback.OnGetBuckets;
-import io.github.maskmasteruk.supabase.storage.Object.Bucket;
-import io.github.maskmasteruk.supabase.storage.Object.CreateBucket;
 
 /**
  * Service class for handling bucket-related operations in Supabase Storage.

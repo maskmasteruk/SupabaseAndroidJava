@@ -68,7 +68,9 @@ class RPCService {
             queryParams.forEach(urlBuilder::appendQueryParam);
 
             JsonUtils.JsonObjectStringBuilder jsonObjectStringBuilder = new JsonUtils.JsonObjectStringBuilder();
-            values.forEach(jsonObjectStringBuilder::append);
+            if (values != null) {
+                values.forEach(jsonObjectStringBuilder::append);
+            }
 
             Response response = new RequestHandler().post(urlBuilder.build(), jsonObjectStringBuilder.build(), headers);
             if (response.getCode() >= HTTP_OK && response.getCode() <= HTTP_PARTIAL) {

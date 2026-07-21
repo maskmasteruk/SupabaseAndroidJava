@@ -170,4 +170,37 @@ public class SupabasePostgres {
     public void rpc(String rpcName, HashMap<String, Object> values, SelectQueryBuilder selectQueryBuilder, PostgrestConfig postgrestConfig, OnPostgrestCallback onPostgrestCallback) {
         rpcService.rpc(rpcName, values, selectQueryBuilder, postgrestConfig, onPostgrestCallback);
     }
+
+    /**
+     * Executes a database function (RPC).
+     *
+     * @param rpcName Name of the function.
+     * @param values Map of arguments for the function.
+     * @param selectQueryBuilder Optional builder for selecting response columns.
+     * @param onPostgrestCallback Callback for results.
+     */
+    public void rpc(String rpcName, HashMap<String, Object> values, SelectQueryBuilder selectQueryBuilder, OnPostgrestCallback onPostgrestCallback) {
+        rpc(rpcName, values, selectQueryBuilder, null, onPostgrestCallback);
+    }
+
+    /**
+     * Executes a database function (RPC).
+     *
+     * @param rpcName Name of the function.
+     * @param values Map of arguments for the function.
+     * @param onPostgrestCallback Callback for results.
+     */
+    public void rpc(String rpcName, HashMap<String, Object> values, OnPostgrestCallback onPostgrestCallback) {
+        rpc(rpcName, values, null, null, onPostgrestCallback);
+    }
+
+    /**
+     * Executes a database function (RPC).
+     *
+     * @param rpcName Name of the function.
+     * @param onPostgrestCallback Callback for results.
+     */
+    public void rpc(String rpcName, OnPostgrestCallback onPostgrestCallback) {
+        rpc(rpcName, null, null, null, onPostgrestCallback);
+    }
 }

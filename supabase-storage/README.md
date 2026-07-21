@@ -103,6 +103,7 @@ The singleton entry point for all storage operations.
 | `uploadOrResumeFile(reference, file)` | `ResumableUploadTask.Task` | Performs a resumable file upload. |
 | `download(reference, file)` | `DownloadTask.Task` | Downloads an object to a file. |
 | `list(reference)` | `Task<ArrayList<SupabaseObject>>` | Lists objects at a path. |
+| `signUrl(reference, expires)` | `Task<String>` | Generates a temporary signed URL. |
 
 **Example: Initialization**
 ```java
@@ -111,13 +112,22 @@ SupabaseStorage storage = SupabaseStorage.getInstance(context);
 
 ### SupabaseStorageReference
 
-Used to define paths within buckets.
+Used to define paths within buckets and generate URLs.
 
 **Example: Building a Path**
 ```java
 SupabaseStorageReference ref = new SupabaseStorageReference("my-bucket")
     .child("images")
     .child("profile.jpg");
+```
+
+**Example: Generating Synchronous URLs**
+```java
+// Get a public URL (for public buckets)
+String publicUrl = ref.publicUrl();
+
+// Get an authenticated URL (requires Auth header)
+String authUrl = ref.authenticatedUrl();
 ```
 
 ### StorageMetadata
@@ -169,6 +179,52 @@ storage.download(ref, dest)
         File downloadedFile = (File) websocketResult;
         // Process file
     });
+```
+
+### Generating URLs
+
+The library provides multiple ways to generate URLs for storage objects, depending on your security needs and bucket configuration.
+
+#### Public URLs
+For objects in **public buckets**, you can generate a URL that is accessible by anyone without authentication.
+```java
+SupabaseStorageReference ref = new SupabaseStorageReference("public-bucket").child("logo.png");
+String url = ref.publicUrl();
+```
+
+#### Authenticated URLs
+For objects in **private or public buckets**, you can generate a URL that requires a valid Supabase authentication header to access.
+```java
+String url = ref.authenticatedUrl();
+```
+
+#### Signed URLs (Temporary Access)
+If you need to grant temporary access to a private object, you can generate a signed URL that expires after a certain duration. This is an asynchronous operation.
+```java
+storage.signUrl(ref, 3600) // Expires in 1 hour (3600 seconds)
+    .onSuccess(signedUrl -> {
+        Log.d("URL", "Signed URL: " + signedUrl);
+    })
+    .onFailure(error -> {
+        Log.e("URL", "Error: " + error.getErrorMessage());
+    });
+```
+
+#### URL Transformations (Image Resizing)
+Both public, authenticated and signed URLs support image transformations if the object is an image. Use `SupabaseObjectUrlBuilder` to configure these options.
+```java
+SupabaseObjectUrlBuilder builder = new SupabaseObjectUrlBuilder();
+SupabaseObjectUrlBuilder.Transformation transformation = new SupabaseObjectUrlBuilder.Transformation();
+transformation.setWidth(200);
+transformation.setHeight(200);
+transformation.setResize(SupabaseObjectUrlBuilder.Resize.COVER);
+builder.setTransformation(transformation);
+
+// Apply to public URL
+String transformedUrl = ref.publicUrl(builder);
+
+// Apply to signed URL
+storage.signUrl(ref, 600, builder).onSuccess(url -> { ... });
 ```
 
 ### Error Handling

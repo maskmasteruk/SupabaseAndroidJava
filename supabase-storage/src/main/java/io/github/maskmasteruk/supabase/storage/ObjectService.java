@@ -4,10 +4,12 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
 
 import android.content.Context;
+import android.icu.util.TimeUnit;
 import android.net.Uri;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,13 +23,6 @@ import io.github.maskmasteruk.supabase.core.Objects.SupabaseError;
 import io.github.maskmasteruk.supabase.core.Runnables;
 import io.github.maskmasteruk.supabase.core.Utils.JsonUtils;
 import io.github.maskmasteruk.supabase.storage.Enum.ObjectSortBy;
-import io.github.maskmasteruk.supabase.storage.Object.StorageMetadata;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseObject;
-import io.github.maskmasteruk.supabase.storage.Object.SupabaseStorageReference;
-import io.github.maskmasteruk.supabase.storage.Tasks.DownloadTask;
-import io.github.maskmasteruk.supabase.storage.Tasks.Task;
-import io.github.maskmasteruk.supabase.storage.Tasks.UpdateTask;
-import io.github.maskmasteruk.supabase.storage.Tasks.UploadTask;
 
 /**
  * Service class for handling object-related operations in Supabase Storage.
@@ -755,4 +750,61 @@ public class ObjectService {
 
         return task;
     }
+
+    /**
+     * Generates a signed URL for a storage object using the Supabase Storage API.
+     * <p>
+     * The generated URL grants temporary access to the referenced object without
+     * requiring authentication until the specified expiration time. Additional
+     * URL options, such as image transformations or download behavior, can be
+     * configured using the supplied {@link SupabaseObjectUrlBuilder}.
+     *
+     * @param supabaseStorageReference Reference to the storage object.
+     * @param expiresInSeconds         Lifetime of the signed URL, in seconds.
+     * @param supabaseObjectUrlBuilder Optional builder for configuring image
+     *                                 transformations, download behavior, and
+     *                                 other supported URL parameters. May be
+     *                                 {@code null}.
+     * @return A {@link Task} that completes with the generated absolute signed URL.
+     */
+    public Task<String> signUrl(SupabaseStorageReference supabaseStorageReference, long expiresInSeconds, SupabaseObjectUrlBuilder supabaseObjectUrlBuilder) {
+        Task<String> task = new Task<>();
+        Runnables.getExecutorService().execute(() -> {
+            if (supabaseStorageReference.getBucketId() == null) {
+                task.onError(new SupabaseError("Bucket ID is required but was null."));
+                return;
+            }
+            UrlBuilder baseStorageUrlBuilder = Helper.getBaseStorageUrlBuilder();
+            baseStorageUrlBuilder.appendPath(STORAGE_END_POINTS.OBJECT);
+            baseStorageUrlBuilder.appendPath(STORAGE_END_POINTS.SIGN);
+            baseStorageUrlBuilder.appendPath(supabaseStorageReference.getBucketId());
+            supabaseStorageReference.getPaths().forEach(baseStorageUrlBuilder::appendPath);
+
+            JsonUtils.JsonObjectStringBuilder jsonObjectStringBuilder = new JsonUtils.JsonObjectStringBuilder();
+            jsonObjectStringBuilder.append("expiresIn", expiresInSeconds);
+
+            if (supabaseObjectUrlBuilder != null) {
+                JsonUtils.JsonObjectBuilder jsonObjectBuilder = new JsonUtils.JsonObjectBuilder();
+                supabaseObjectUrlBuilder.buildQueryParams().forEach(jsonObjectBuilder::append);
+                jsonObjectStringBuilder.append("transform", jsonObjectStringBuilder.build());
+
+            }
+
+            Response response = new RequestHandler().post(baseStorageUrlBuilder.build(), jsonObjectStringBuilder.build());
+            if (response.getCode() >= HTTP_OK && response.getCode() <= HTTP_PARTIAL) {
+                JSONObject jsonObject = response.getResponseJSON();
+                String signedURL = jsonObject.optString("signedURL");
+                String projectUrl = Helper.getBaseStorageUrlBuilder().build();
+                projectUrl = projectUrl.replaceAll("/+$", "");
+                task.onSuccess(projectUrl + signedURL);
+            } else {
+                Helper.generateError(response, task);
+            }
+
+        });
+
+        return task;
+    }
+
+
 }

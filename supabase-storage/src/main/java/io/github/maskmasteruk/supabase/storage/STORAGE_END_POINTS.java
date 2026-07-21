@@ -36,6 +36,15 @@ class STORAGE_END_POINTS {
     /** Segment for resumable upload operations. */
     public static final String RESUMABLE = "resumable";
 
+    /** Segment for object rendering operations. */
+    public static final String RENDER = "render";
+
+    /** Segment for image transformation operations. */
+    public static final String IMAGE = "image";
+
+    /** Segment for authenticated object access operations. */
+    public static final String AUTHENTICATED = "authenticated";
+
     /** Segment for signed URL operations. */
     public static final String SIGN = "sign";
 
